@@ -1,36 +1,60 @@
 # TICTAC LIVE
 
-Application Android pour les reporters de [TIC-TAC Hebdo](https://tictachebdo.cd).
+Applications terrain et régie pour [TIC-TAC Hebdo](https://tictachebdo.cd).
 
-## À quoi ça sert
+Compte GitHub : **stickrdc** (`stickrdc@gmail.com`)  
+Dépôt : `https://github.com/stickrdc/tictac-live`
 
-- **Écouter** la radio en ligne (flux Icecast public).
-- **Émettre** depuis le terrain : connexion micro vers la régie (`/direct/reporter`), réservée aux comptes WordPress autorisés (contributeur / admin / régisseur).
+## Applications
 
-Le mot de passe SOURCE Icecast **n’est jamais** dans l’app. Seule la régie (ou un encodeur studio) pousse vers l’antenne publique.
+| App | Public | Dossier | Binaire |
+|-----|--------|---------|---------|
+| **TICTAC LIVE** | Reporters (Android) | `android-shell/` | `TICTAC-LIVE.apk` |
+| **TICTAC Studio Regie** | Admin / régisseur (Windows) | `windows-studio/` | `TICTAC-Studio-Regie.exe` |
 
-## Flux
+## Usage reporters
 
-1. Le reporter ouvre TICTAC LIVE et se connecte avec son compte TIC-TAC.
-2. Il active le micro → la régie le voit dans `/direct/studio`.
-3. Le régisseur / admin sélectionne le reporter (mix jusqu’à 3) et met à l’antenne.
-4. Le public écoute sur le site (barre radio) ou dans l’onglet Écouter de l’app.
+1. Compte contributeur sur tictachebdo.cd
+2. Mon compte → **Télécharger TICTAC LIVE (Android)** ou **Envoyer au studio**
+3. Activer le micro → la régie voit le reporter
 
-## Build APK (Android Studio)
+## Usage régie (studio)
 
-1. Ouvrir le dossier `android-shell/` dans Android Studio.
-2. Sync Gradle → Build → Build Bundle(s) / APK(s) → Build APK(s).
-3. Installer sur le téléphone (sources inconnues si hors Play Store).
+1. Compte administrateur
+2. Mon compte → **Télécharger TICTAC Studio (Windows)**
+3. Installer sur le PC studio → connexion à `/direct/studio`
+4. Sélectionner jusqu’à 3 reporters en mix
 
-Package : `cd.tictachebdo.live`
+## Build
 
-## Serveur streaming (écoute publique)
+### Android
 
-- HTTPS : `https://video2.getstreamhosting.com/radio/8000/stream`
-- Statut : via `admin-ajax.php?action=stick_tth_radio_status` sur le site
+Ouvrir `android-shell/` dans Android Studio → Build APK → renommer en `TICTAC-LIVE.apk`.
 
-## Permissions
+### Windows
 
-- Micro (émission reporter)
-- Internet
-- Audio (écoute en arrière-plan limitée au WebView)
+```bat
+cd windows-studio
+Lancer-TICTAC-Studio.bat
+```
+
+Ou :
+
+```bat
+python -m pip install -r requirements.txt
+python -m PyInstaller --noconfirm --onefile --windowed --name TICTAC-Studio-Regie studio_regie.py
+```
+
+## Releases
+
+Publier les binaires dans GitHub Releases (`latest`) :
+
+- `TICTAC-LIVE.apk`
+- `TICTAC-Studio-Regie.exe`
+
+Les boutons du dashboard pointent vers ces URLs.
+
+## Streaming public
+
+Écoute : `https://video2.getstreamhosting.com/radio/8000/stream`  
+Le mot de passe SOURCE Icecast n’est **jamais** dans les apps.

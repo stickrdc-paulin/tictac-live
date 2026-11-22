@@ -5,6 +5,7 @@ local.properties
 *.iml
 *.apk
 *.aab
+*.exe
 *.keystore
 *.jks
 .env
@@ -12,3 +13,7 @@ local.properties
 !.env.example
 .DS_Store
 node_modules/
+windows-studio/dist/
+windows-studio/build/
+downloads/*.exe
+downloads/*.apk
