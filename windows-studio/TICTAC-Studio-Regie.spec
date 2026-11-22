@@ -18,6 +18,7 @@ a = Analysis(
     ],
     hiddenimports=[
         "auth_session",
+        "app_update",
         "local_server",
         "browser_cookie3",
         "requests",

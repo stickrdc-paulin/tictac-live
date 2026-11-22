@@ -2,6 +2,24 @@ plugins {
     id 'com.android.application'
 }
 
+def readAppVersion = {
+    def f = rootProject.file('VERSION')
+    if (f.exists()) {
+        def v = f.getText('UTF-8').trim().readLines()[0].trim()
+        if (v) return v
+    }
+    return '1.1.0'
+}
+def appVersionName = readAppVersion()
+// versionCode : majeures*10000 + mineures*100 + patch (ex. 1.1.0 → 10100)
+def appVersionCode = {
+    def m = (appVersionName =~ /^(\d+)\.(\d+)\.(\d+)/)
+    if (m.find()) {
+        return (m.group(1) as int) * 10000 + (m.group(2) as int) * 100 + (m.group(3) as int)
+    }
+    return 10100
+}()
+
 android {
     namespace 'cd.tictachebdo.live'
     compileSdk 34
@@ -10,8 +28,10 @@ android {
         applicationId "cd.tictachebdo.live"
         minSdk 24
         targetSdk 34
-        versionCode 1
-        versionName "1.0.0"
+        versionCode appVersionCode
+        versionName appVersionName
+        // Nom du fichier APK au build : TICTAC-LIVE-1.1.0.apk
+        setProperty('archivesBaseName', "TICTAC-LIVE-${appVersionName}")
     }
 
     buildTypes {

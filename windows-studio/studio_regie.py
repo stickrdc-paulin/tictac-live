@@ -17,6 +17,7 @@ import threading
 import time
 from pathlib import Path
 
+from app_update import check_for_update
 from auth_session import APP_DIR, APP_VERSION
 from local_server import start_server
 
@@ -109,6 +110,10 @@ def ensure_installed() -> Path | None:
     """
     Installe / met à jour la copie canonique dans %LOCALAPPDATA%\\TICTAC-Studio
     et retire les anciennes EXE dispersées.
+
+    Scénario MAJ depuis une ancienne install :
+    - Setup Inno (même AppId) écrase {localappdata}\\TICTAC-Studio
+    - Ou lancement d’un nouvel EXE portable → copie ici si version / taille différente
     """
     APP_DIR.mkdir(parents=True, exist_ok=True)
     canonical = APP_DIR / EXE_NAME
@@ -121,9 +126,14 @@ def ensure_installed() -> Path | None:
             try:
                 same = canonical.resolve() == self_path.resolve()
                 current_ver = version_file.read_text(encoding="utf-8").strip() if version_file.is_file() else ""
-                need_copy = (not same) and (current_ver != APP_VERSION or canonical.stat().st_size != self_path.stat().st_size)
+                size_diff = canonical.stat().st_size != self_path.stat().st_size
+                # Toujours propager si on lance un binaire hors dossier installé
+                # avec une version différente (ex. Setup / EXE téléchargé versionné).
+                need_copy = (not same) and (current_ver != APP_VERSION or size_diff)
                 if same:
                     need_copy = False
+                    if current_ver != APP_VERSION:
+                        version_file.write_text(APP_VERSION, encoding="utf-8")
             except Exception:
                 need_copy = True
         if need_copy and self_path.resolve() != canonical.resolve():
@@ -140,9 +150,17 @@ def ensure_installed() -> Path | None:
     return canonical if canonical.is_file() else None
 
 
+def _bg_check_update() -> None:
+    try:
+        check_for_update(open_browser=True)
+    except Exception:
+        pass
+
+
 def main() -> int:
     _kill_other_instances()
     ensure_installed()
+    threading.Thread(target=_bg_check_update, daemon=True).start()
 
     try:
         import webview
