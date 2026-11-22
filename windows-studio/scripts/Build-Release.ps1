@@ -38,14 +38,17 @@ python -m PyInstaller --noconfirm TICTAC-Studio-Regie.spec
 if ($LASTEXITCODE -ne 0) { Write-Error 'PyInstaller a échoué' }
 
 $exe = Join-Path $Root 'dist\TICTAC-Studio-Regie.exe'
+$exeRoot = Join-Path $Root 'TICTAC-Studio-Regie.exe'
 if (-not (Test-Path -LiteralPath $exe)) {
     Write-Error "Exe introuvable : $exe"
 }
-Copy-Item -LiteralPath $exe -Destination (Join-Path $Root 'TICTAC-Studio-Regie.exe') -Force
 
+# Signer dist avant la copie racine : Lancer-TICTAC-Studio.bat préfère
+# windows-studio\TICTAC-Studio-Regie.exe (sinon une copie non signée serait lancée).
 if (-not $SkipSign) {
     & (Join-Path $PSScriptRoot 'Sign-Authenticode.ps1') $exe
 }
+Copy-Item -LiteralPath $exe -Destination $exeRoot -Force
 
 if ($SkipInstaller) {
     Write-Host "[build] Terminé (exe seul) : $exe"
