@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.TictacLive" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/tth_accent</item>
+        <item name="colorPrimaryVariant">@color/tth_bg</item>
+        <item name="colorOnPrimary">@color/tth_text</item>
+        <item name="android:statusBarColor">@color/tth_bg</item>
+        <item name="android:navigationBarColor">@color/tth_bg</item>
+        <item name="android:windowBackground">@color/tth_bg</item>
+    </style>
+</resources>

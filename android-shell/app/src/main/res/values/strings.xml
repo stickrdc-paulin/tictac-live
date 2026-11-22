@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TICTAC LIVE</string>
+    <string name="tab_listen">Écouter</string>
+    <string name="tab_report">Reporter</string>
+    <string name="site_base">https://tictachebdo.cd</string>
+    <string name="listen_url">https://video2.getstreamhosting.com/radio/8000/stream</string>
+    <string name="reporter_url">https://tictachebdo.cd/direct/reporter.php</string>
+    <string name="home_url">https://tictachebdo.cd/direct/</string>
+    <string name="mic_rationale">Le micro sert à envoyer le reportage à la régie TIC-TAC.</string>
+</resources>

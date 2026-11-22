@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TICTAC LIVE</title>
+  <style>
+    :root { --bg:#1a1510; --accent:#c45c26; --text:#f6f1ea; --muted:#c9b8a4; }
+    body { margin:0; font-family: Georgia, serif; background:var(--bg); color:var(--text); }
+    header { padding:1.25rem 1rem .5rem; }
+    h1 { margin:0; font-size:1.5rem; letter-spacing:.04em; }
+    p { color:var(--muted); margin:.35rem 0 0; }
+    .actions { display:flex; flex-direction:column; gap:.75rem; padding:1rem; max-width:28rem; }
+    a.btn, button.btn {
+      display:block; text-align:center; text-decoration:none; color:#fff;
+      background:var(--accent); border:0; padding:.9rem 1rem; font:inherit; cursor:pointer;
+    }
+    a.btn.ghost { background:transparent; border:1px solid rgba(255,255,255,.2); color:var(--text); }
+    .status { padding:0 1rem 1rem; color:var(--muted); font-family:system-ui,sans-serif; font-size:.85rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>TICTAC LIVE</h1>
+    <p>Écoute radio + micro terrain pour la régie TIC-TAC.</p>
+  </header>
+  <div class="actions">
+    <button class="btn" id="btnListen" type="button">Écouter la radio</button>
+    <a class="btn ghost" href="https://tictachebdo.cd/direct/reporter.php">Ouvrir le micro reporter</a>
+    <a class="btn ghost" href="https://tictachebdo.cd/direct/studio.php">Régie studio (admin)</a>
+  </div>
+  <p class="status" id="status">…</p>
+  <audio id="audio" preload="none"></audio>
+  <script>
+    const LISTEN = 'https://video2.getstreamhosting.com/radio/8000/stream';
+    const STATUS = 'https://tictachebdo.cd/wp-admin/admin-ajax.php?action=stick_tth_radio_status';
+    const audio = document.getElementById('audio');
+    const btn = document.getElementById('btnListen');
+    const status = document.getElementById('status');
+    let playing = false;
+    async function refresh() {
+      try {
+        const r = await fetch(STATUS, { cache: 'no-store' });
+        const j = await r.json();
+        status.textContent = j.on_air
+          ? ('En direct · ' + (j.listeners || 0) + ' auditeur(s)')
+          : 'Hors antenne';
+      } catch (e) {
+        status.textContent = 'Statut indisponible';
+      }
+    }
+    btn.onclick = async () => {
+      if (playing) {
+        audio.pause(); audio.removeAttribute('src'); audio.load();
+        playing = false; btn.textContent = 'Écouter la radio'; return;
+      }
+      audio.src = LISTEN + '?t=' + Date.now();
+      await audio.play();
+      playing = true; btn.textContent = 'Arrêter';
+    };
+    refresh(); setInterval(refresh, 30000);
+  </script>
+</body>
+</html>

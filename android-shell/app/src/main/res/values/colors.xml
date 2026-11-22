@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="tth_bg">#1A1510</color>
+    <color name="tth_accent">#C45C26</color>
+    <color name="tth_text">#F6F1EA</color>
+    <color name="tth_muted">#C9B8A4</color>
+</resources>
