@@ -417,8 +417,49 @@
     }
   }
 
+  async function dropAllLiveChannels() {
+    for (const id of [...channels.keys()]) {
+      await dropChannel(id, false);
+    }
+  }
+
+  function scheduleListPolling(fast) {
+    clearInterval(listTimer);
+    listTimer = setInterval(() => {
+      refreshList().catch((e) => {
+        if (onlineStatusAvailable) showErr(e.message);
+      });
+    }, fast ? 2000 : 8000);
+  }
+
+  /**
+   * Applique les effets d’une transition réseau (reprise ou perte).
+   * Centralisé pour éviter la course entre listTimer et netTimer :
+   * refreshList() peut mettre onlineStatusAvailable à false avant que
+   * netTimer ne capture prev — les canaux live doivent quand même être coupés.
+   */
+  async function applyNetworkTransition(wasOnline, nowOnline) {
+    if (wasOnline === nowOnline) return;
+    if (!wasOnline && nowOnline) {
+      offlineSession = false;
+      scheduleListPolling(true);
+      syncReporters(false).catch(() => {});
+      setCacheLine('Réseau de retour — sync en cours');
+      return;
+    }
+    // Perte de réseau : stopper les polls WebRTC / signalisation
+    scheduleListPolling(false);
+    await dropAllLiveChannels();
+    updateStatus();
+    renderList(lastRows);
+    offlineSession = true;
+    setCacheLine('Réseau perdu — écoute live interrompue');
+  }
+
   async function refreshList() {
+    const wasOnline = onlineStatusAvailable;
     await fetchNetworkStatus();
+    await applyNetworkTransition(wasOnline, onlineStatusAvailable);
     if (!onlineStatusAvailable) {
       // Hors ligne : lire le cache local, pas de poll live
       try {
@@ -605,34 +646,14 @@
         await refreshList();
       }
 
-      clearInterval(listTimer);
-      listTimer = setInterval(() => {
-        refreshList().catch((e) => {
-          if (onlineStatusAvailable) showErr(e.message);
-        });
-      }, onlineStatusAvailable ? 2000 : 8000);
+      scheduleListPolling(onlineStatusAvailable);
 
       clearInterval(netTimer);
       netTimer = setInterval(async () => {
         const prev = onlineStatusAvailable;
         await fetchNetworkStatus();
         setNetPill();
-        // Reprise réseau → sync + poll plus fréquent
-        if (!prev && onlineStatusAvailable) {
-          clearInterval(listTimer);
-          listTimer = setInterval(() => refreshList().catch((e) => showErr(e.message)), 2000);
-          syncReporters(false).catch(() => {});
-        } else if (prev && !onlineStatusAvailable) {
-          clearInterval(listTimer);
-          listTimer = setInterval(() => refreshList().catch(() => {}), 8000);
-          // Couper les canaux live si le réseau disparaît
-          for (const id of [...channels.keys()]) {
-            await dropChannel(id, false);
-          }
-          updateStatus();
-          renderList(lastRows);
-          setCacheLine('Réseau perdu — écoute live interrompue');
-        }
+        await applyNetworkTransition(prev, onlineStatusAvailable);
       }, 5000);
     } catch (ex) {
       showErr(ex.message || 'Impossible d’ouvrir la régie');
