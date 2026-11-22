@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import json
 import os
-from http.cookiejar import CookieJar
+import shutil
+import tempfile
 from pathlib import Path
-from typing import Any
-from urllib.parse import urlparse
+from typing import Any, Callable
 
 import requests
 
@@ -18,6 +18,7 @@ DOMAIN = "tictachebdo.cd"
 
 APP_DIR = Path(os.environ.get("LOCALAPPDATA", str(Path.home()))) / "TICTAC-Studio"
 COOKIE_FILE = APP_DIR / "session.json"
+APP_VERSION = "1.0.1"
 
 
 def _ensure_dir() -> None:
@@ -27,7 +28,7 @@ def _ensure_dir() -> None:
 def save_cookies(cookies: dict[str, str], source: str = "app") -> None:
     _ensure_dir()
     COOKIE_FILE.write_text(
-        json.dumps({"cookies": cookies, "source": source}, ensure_ascii=False, indent=2),
+        json.dumps({"cookies": cookies, "source": source, "version": APP_VERSION}, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
 
@@ -50,40 +51,94 @@ def clear_saved_cookies() -> None:
         pass
 
 
+def _cookie_paths() -> list[tuple[str, Path]]:
+    local = Path(os.environ.get("LOCALAPPDATA", ""))
+    roaming = Path(os.environ.get("APPDATA", ""))
+    home = Path.home()
+    return [
+        ("chrome", local / "Google" / "Chrome" / "User Data" / "Default" / "Network" / "Cookies"),
+        ("chrome", local / "Google" / "Chrome" / "User Data" / "Default" / "Cookies"),
+        ("edge", local / "Microsoft" / "Edge" / "User Data" / "Default" / "Network" / "Cookies"),
+        ("edge", local / "Microsoft" / "Edge" / "User Data" / "Default" / "Cookies"),
+        ("brave", local / "BraveSoftware" / "Brave-Browser" / "User Data" / "Default" / "Network" / "Cookies"),
+        ("firefox", roaming / "Mozilla" / "Firefox" / "Profiles"),
+        ("chrome", home / "AppData" / "Local" / "Google" / "Chrome" / "User Data" / "Default" / "Network" / "Cookies"),
+    ]
+
+
+def _load_jar_from_copy(loader: Callable[..., Any], cookie_file: Path) -> Any:
+    """Copie la base cookies (Chrome/Edge souvent verrouillés) puis lit."""
+    tmp_dir = Path(tempfile.mkdtemp(prefix="tt_cookies_"))
+    try:
+        dest = tmp_dir / "Cookies"
+        shutil.copy2(cookie_file, dest)
+        # Fichier journal parfois requis
+        for side in (cookie_file.parent / (cookie_file.name + "-journal"), cookie_file.with_suffix(".db-journal")):
+            if side.is_file():
+                try:
+                    shutil.copy2(side, tmp_dir / side.name)
+                except Exception:
+                    pass
+        return loader(cookie_file=str(dest), domain_name=DOMAIN)
+    finally:
+        shutil.rmtree(tmp_dir, ignore_errors=True)
+
+
 def import_browser_cookies() -> tuple[dict[str, str], str]:
-    """Lit les cookies tictachebdo.cd depuis Chrome / Edge / Firefox (si ouverts)."""
+    """Lit les cookies tictachebdo.cd depuis Chrome / Edge / Brave / Firefox."""
     try:
         import browser_cookie3  # type: ignore
     except ImportError:
         return {}, ""
 
-    loaders = [
+    loaders: list[tuple[str, Callable[..., Any]]] = [
         ("chrome", getattr(browser_cookie3, "chrome", None)),
         ("edge", getattr(browser_cookie3, "edge", None)),
+        ("brave", getattr(browser_cookie3, "brave", None)),
         ("firefox", getattr(browser_cookie3, "firefox", None)),
+        ("chromium", getattr(browser_cookie3, "chromium", None)),
     ]
-    merged: dict[str, str] = {}
-    source = ""
+
+    best: dict[str, str] = {}
+    best_src = ""
+
     for name, fn in loaders:
         if not callable(fn):
             continue
         try:
             jar = fn(domain_name=DOMAIN)
-            got = False
+        except Exception:
+            jar = None
+            # Tentative via copie du fichier Cookies (navigateur ouvert)
+            for label, path in _cookie_paths():
+                if label != name or not path.is_file():
+                    continue
+                try:
+                    jar = _load_jar_from_copy(fn, path)
+                    break
+                except Exception:
+                    continue
+            if jar is None:
+                continue
+
+        merged: dict[str, str] = {}
+        try:
             for c in jar:
-                host = (c.domain or "").lstrip(".")
+                host = (getattr(c, "domain", "") or "").lstrip(".")
                 if DOMAIN not in host:
                     continue
                 merged[c.name] = c.value
-                got = True
-            if got and any(k.startswith("wordpress_logged_in_") for k in merged):
-                source = name
-                break
-            if got and not source:
-                source = name
         except Exception:
             continue
-    return merged, source
+
+        if not merged:
+            continue
+        if any(k.startswith("wordpress_logged_in_") for k in merged):
+            return merged, name
+        if not best:
+            best, best_src = merged, name
+
+    return best, best_src
 
 
 def cookies_header(cookies: dict[str, str]) -> str:
@@ -122,7 +177,6 @@ def login_wordpress(username: str, password: str) -> tuple[dict[str, str], dict[
         allow_redirects=True,
     )
     cookies = {c.name: c.value for c in s.cookies}
-    # Domaine parfois .tictachebdo.cd
     cfg = api_config(cookies)
     return cookies, cfg
 
@@ -131,12 +185,15 @@ def resolve_session() -> dict[str, Any]:
     """
     Ordre :
     1) session app sauvegardée
-    2) cookies navigateur local (Chrome/Edge/Firefox)
+    2) cookies navigateur local (Chrome/Edge/Brave/Firefox)
     """
     # 1) saved
     saved = load_saved_cookies()
     if saved:
-        cfg = api_config(saved)
+        try:
+            cfg = api_config(saved)
+        except Exception as e:
+            cfg = {"ok": False, "error": str(e)}
         auth = (cfg.get("auth") or {}) if cfg.get("ok") else {}
         if auth.get("studio"):
             return {
@@ -146,11 +203,16 @@ def resolve_session() -> dict[str, Any]:
                 "auth": auth,
                 "config": cfg,
             }
+        # Session app expirée → on nettoie pour forcer le navigateur / login
+        clear_saved_cookies()
 
     # 2) browser
     browser_cookies, browser_src = import_browser_cookies()
     if browser_cookies:
-        cfg = api_config(browser_cookies)
+        try:
+            cfg = api_config(browser_cookies)
+        except Exception as e:
+            cfg = {"ok": False, "error": str(e)}
         auth = (cfg.get("auth") or {}) if cfg.get("ok") else {}
         if auth.get("studio"):
             save_cookies(browser_cookies, source=f"browser:{browser_src}")

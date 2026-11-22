@@ -2,7 +2,7 @@
   const viewLogin = document.getElementById('view-login');
   const viewStudio = document.getElementById('view-studio');
   const sessionStatus = document.getElementById('sessionStatus');
-  const btnUseSession = document.getElementById('btnUseSession');
+  const sessionHint = document.getElementById('sessionHint');
   const loginForm = document.getElementById('loginForm');
   const loginErr = document.getElementById('loginErr');
   const authLine = document.getElementById('authLine');
@@ -33,7 +33,6 @@
   let studioOpenedAt = Date.now();
   let keepAlive = null;
   let kickBusy = false;
-  let pendingSession = null;
 
   function showErr(msg) {
     err.hidden = !msg;
@@ -55,33 +54,28 @@
   }
 
   async function authCheck() {
-    sessionStatus.textContent = 'Analyse des sessions navigateur / app…';
-    btnUseSession.hidden = true;
-    pendingSession = null;
+    sessionStatus.textContent = 'Recherche d’une session admin déjà ouverte…';
+    if (sessionHint) sessionHint.hidden = false;
     const res = await fetch('/auth/check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
     const data = await res.json();
     if (data.ok && data.auth && data.auth.studio) {
       const src = data.source || 'session';
+      const who = data.auth.displayName || 'admin';
       const label = src.indexOf('browser:') === 0
-        ? ('Session ' + src.replace('browser:', '') + ' détectée (' + (data.auth.displayName || 'admin') + ')')
-        : ('Session app enregistrée (' + (data.auth.displayName || 'admin') + ')');
+        ? ('Session ' + src.replace('browser:', '') + ' trouvée (' + who + ') — ouverture…')
+        : ('Session app trouvée (' + who + ') — ouverture…');
       sessionStatus.textContent = label;
-      pendingSession = data;
-      btnUseSession.hidden = false;
-      btnUseSession.focus();
+      if (sessionHint) sessionHint.hidden = true;
+      showStudio(data.auth || {});
       return;
     }
+    if (sessionHint) sessionHint.hidden = false;
     if (data.auth && data.auth.loggedIn) {
       sessionStatus.textContent = data.error || 'Session navigateur trouvée, mais sans droit régie.';
     } else {
-      sessionStatus.textContent = data.error || 'Aucune session admin. Connectez-vous ci-dessous.';
+      sessionStatus.textContent = data.error || 'Aucune session admin ouverte. Connectez-vous ci-dessous.';
     }
   }
-
-  btnUseSession.addEventListener('click', () => {
-    if (!pendingSession) return;
-    showStudio(pendingSession.auth || {});
-  });
 
   loginForm.addEventListener('submit', async (ev) => {
     ev.preventDefault();
