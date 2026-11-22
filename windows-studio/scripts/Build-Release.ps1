@@ -6,7 +6,8 @@
 .DESCRIPTION
   1. Synchronise version_info.txt depuis VERSION
   2. Build TICTAC-Studio-Regie.exe (métadonnées FileVersion / ProductVersion)
-  3. Signe l'exe si TICTAC_CODE_SIGN_* est défini
+  3. Signe dist\…exe si TICTAC_CODE_SIGN_* est défini, puis copie vers la racine
+     (Lancer-TICTAC-Studio.bat préfère la copie racine)
   4. Compile l'installateur Inno Setup (version visible sur l'écran d'accueil)
   5. Signe le Setup si possible
 
