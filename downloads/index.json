@@ -3,7 +3,7 @@
     "name": "TICTAC LIVE",
     "platform": "android",
     "version": "1.1.0",
-    "versionCode": 2,
+    "versionCode": 10100,
     "package": "cd.tictachebdo.live",
     "filename": "TICTAC-LIVE-1.1.0.apk",
     "github": "https://github.com/stickrdc-paulin/tictac-live",
@@ -11,20 +11,21 @@
     "github_release": "https://github.com/stickrdc-paulin/tictac-live/releases/latest/download/TICTAC-LIVE-1.1.0.apk",
     "download_legacy": "https://tictachebdo.cd/wp-content/uploads/tictac-live/TICTAC-LIVE.apk",
     "audience": "reporter",
-    "update_note": "Même applicationId : installer le nouvel APK par-dessus l’ancienne version (pas besoin de désinstaller)."
+    "update_note": "Même applicationId : installer le nouvel APK par-dessus.",
+    "signed": false
   },
   "windows_studio": {
     "name": "TICTAC Studio Regie",
     "platform": "windows",
     "version": "1.1.0",
-    "filename": "TICTAC-Studio-Regie-Setup-1.1.0.exe",
+    "filename": "TICTAC-Studio-Regie-1.1.0.exe",
     "github": "https://github.com/stickrdc-paulin/tictac-live",
-    "download": "https://tictachebdo.cd/wp-content/uploads/tictac-live/TICTAC-Studio-Regie-Setup-1.1.0.exe",
-    "github_release": "https://github.com/stickrdc-paulin/tictac-live/releases/latest/download/TICTAC-Studio-Regie-Setup-1.1.0.exe",
-    "setup_github_release": "https://github.com/stickrdc-paulin/tictac-live/releases/latest/download/TICTAC-Studio-Regie-Setup-1.1.0.exe",
-    "exe_download": "https://tictachebdo.cd/wp-content/uploads/tictac-live/TICTAC-Studio-Regie.exe",
-    "exe_github_release": "https://github.com/stickrdc-paulin/tictac-live/releases/latest/download/TICTAC-Studio-Regie.exe",
+    "download": "https://tictachebdo.cd/wp-content/uploads/tictac-live/TICTAC-Studio-Regie-1.1.0.exe",
+    "github_release": "https://github.com/stickrdc-paulin/tictac-live/releases/latest/download/TICTAC-Studio-Regie-1.1.0.exe",
+    "exe_download": "https://tictachebdo.cd/wp-content/uploads/tictac-live/TICTAC-Studio-Regie-1.1.0.exe",
+    "exe_github_release": "https://github.com/stickrdc-paulin/tictac-live/releases/latest/download/TICTAC-Studio-Regie-1.1.0.exe",
     "audience": "admin",
-    "update_note": "Même AppId Inno Setup : lancer le Setup versionné met à jour %LOCALAPPDATA%\\TICTAC-Studio sans désinstaller."
+    "update_note": "Fichier portable versionné. Setup Inno + Authenticode dès certificat disponible.",
+    "signed": false
   }
 }
