@@ -12,6 +12,6 @@ if exist "%~dp0dist\TICTAC-Studio-Regie.exe" (
 )
 echo Construction de TICTAC Studio Regie...
 python -m pip install -r requirements.txt -q
-python -m PyInstaller --noconfirm --onefile --windowed --name "TICTAC-Studio-Regie" studio_regie.py
+python -m PyInstaller --noconfirm TICTAC-Studio-Regie.spec
 copy /Y "dist\TICTAC-Studio-Regie.exe" "TICTAC-Studio-Regie.exe" >nul
 start "" "%~dp0TICTAC-Studio-Regie.exe"

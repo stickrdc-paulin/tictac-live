@@ -1,2 +1,4 @@
 pywebview>=5.0
+requests>=2.31
+browser-cookie3>=0.19
 pyinstaller>=6.0
