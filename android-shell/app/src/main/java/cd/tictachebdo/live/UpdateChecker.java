@@ -21,8 +21,9 @@ import java.nio.charset.StandardCharsets;
  */
 final class UpdateChecker {
     private static final String[] INDEX_URLS = {
-            "https://tictachebdo.cd/wp-content/uploads/tictac-live/index.json",
-            "https://raw.githubusercontent.com/stickrdc-paulin/tictac-live/main/downloads/index.json"
+            // Catalogue JSON seulement — APK sur GitHub Releases, pas Verpex.
+            "https://raw.githubusercontent.com/stickrdc-paulin/tictac-live/main/downloads/index.json",
+            "https://tictachebdo.cd/wp-content/uploads/tictac-live/index.json"
     };
 
     private UpdateChecker() {

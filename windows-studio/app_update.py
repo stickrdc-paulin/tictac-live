@@ -11,8 +11,9 @@ import requests
 from auth_session import APP_VERSION
 
 INDEX_URLS = (
-    "https://tictachebdo.cd/wp-content/uploads/tictac-live/index.json",
+    # Catalogue seulement (JSON) — les binaires sont sur GitHub Releases, pas Verpex.
     "https://raw.githubusercontent.com/stickrdc-paulin/tictac-live/main/downloads/index.json",
+    "https://tictachebdo.cd/wp-content/uploads/tictac-live/index.json",
 )
 
 

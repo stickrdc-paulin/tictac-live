@@ -9,10 +9,8 @@
     "github": "https://github.com/stickrdc-paulin/tictac-live",
     "download": "https://github.com/stickrdc-paulin/tictac-live/releases/latest/download/TICTAC-LIVE-1.1.0.apk",
     "github_release": "https://github.com/stickrdc-paulin/tictac-live/releases/latest/download/TICTAC-LIVE-1.1.0.apk",
-    "download_fallback": "https://tictachebdo.cd/wp-content/uploads/tictac-live/TICTAC-LIVE-1.1.0.apk",
     "audience": "reporter",
-    "update_note": "Même applicationId : installer le nouvel APK par-dessus.",
-    "signed": false
+    "host": "github"
   },
   "windows_studio": {
     "name": "TICTAC Studio Regie",
@@ -22,9 +20,8 @@
     "github": "https://github.com/stickrdc-paulin/tictac-live",
     "download": "https://github.com/stickrdc-paulin/tictac-live/releases/latest/download/TICTAC-Studio-Regie-1.1.0.exe",
     "github_release": "https://github.com/stickrdc-paulin/tictac-live/releases/latest/download/TICTAC-Studio-Regie-1.1.0.exe",
-    "download_fallback": "https://tictachebdo.cd/wp-content/uploads/tictac-live/TICTAC-Studio-Regie-1.1.0.exe",
     "audience": "admin",
-    "update_note": "Téléchargement principal = GitHub Releases. Verpex = repli seulement.",
-    "signed": false
+    "host": "github",
+    "update_note": "Aucun binaire sur Verpex — GitHub Releases uniquement."
   }
 }
