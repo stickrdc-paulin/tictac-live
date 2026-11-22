@@ -2,8 +2,9 @@
 
 Applications terrain et régie pour [TIC-TAC Hebdo](https://tictachebdo.cd).
 
-Compte GitHub : **stickrdc** (`stickrdc@gmail.com`)  
-Dépôt : `https://github.com/stickrdc/tictac-live`
+Compte GitHub : **stickrdc-paulin** (`stickrdc@gmail.com`)  
+Dépôt : `https://github.com/stickrdc-paulin/tictac-live`  
+Release : `https://github.com/stickrdc-paulin/tictac-live/releases/tag/v1.0.0`
 
 ## Applications
 

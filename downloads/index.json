@@ -4,18 +4,18 @@
     "platform": "android",
     "version": "1.0.0",
     "package": "cd.tictachebdo.live",
-    "github": "https://github.com/stickrdc/tictac-live",
+    "github": "https://github.com/stickrdc-paulin/tictac-live",
     "download": "https://tictachebdo.cd/wp-content/uploads/tictac-live/TICTAC-LIVE.apk",
-    "github_release": "https://github.com/stickrdc/tictac-live/releases/latest/download/TICTAC-LIVE.apk",
+    "github_release": "https://github.com/stickrdc-paulin/tictac-live/releases/latest/download/TICTAC-LIVE.apk",
     "audience": "reporter"
   },
   "windows_studio": {
     "name": "TICTAC Studio Regie",
     "platform": "windows",
     "version": "1.0.0",
-    "github": "https://github.com/stickrdc/tictac-live",
+    "github": "https://github.com/stickrdc-paulin/tictac-live",
     "download": "https://tictachebdo.cd/wp-content/uploads/tictac-live/TICTAC-Studio-Regie.exe",
-    "github_release": "https://github.com/stickrdc/tictac-live/releases/latest/download/TICTAC-Studio-Regie.exe",
+    "github_release": "https://github.com/stickrdc-paulin/tictac-live/releases/latest/download/TICTAC-Studio-Regie.exe",
     "audience": "admin"
   }
 }
