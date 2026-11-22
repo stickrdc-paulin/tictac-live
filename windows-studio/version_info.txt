@@ -1,0 +1,36 @@
+# UTF-8
+#
+# Métadonnées Windows (Properties → Détails) pour TICTAC-Studio-Regie.exe.
+# Généré / aligné sur windows-studio/VERSION — ne pas diverger.
+VSVersionInfo(
+  ffi=FixedFileInfo(
+    filevers=(1, 1, 0, 0),
+    prodvers=(1, 1, 0, 0),
+    mask=0x3F,
+    flags=0x0,
+    OS=0x40004,
+    fileType=0x1,
+    subtype=0x0,
+    date=(0, 0)
+  ),
+  kids=[
+    StringFileInfo(
+      [
+        StringTable(
+          '040C04B0',
+          [
+            StringStruct('CompanyName', 'STICK RDC SARLU'),
+            StringStruct('FileDescription', 'TICTAC Studio Regie — régie audio TIC-TAC Hebdo'),
+            StringStruct('FileVersion', '1.1.0'),
+            StringStruct('InternalName', 'TICTAC-Studio-Regie'),
+            StringStruct('LegalCopyright', 'Copyright (C) STICK RDC SARLU'),
+            StringStruct('OriginalFilename', 'TICTAC-Studio-Regie.exe'),
+            StringStruct('ProductName', 'TICTAC Studio Regie'),
+            StringStruct('ProductVersion', '1.1.0'),
+          ]
+        )
+      ]
+    ),
+    VarFileInfo([VarStruct('Translation', [1036, 1200])])
+  ]
+)

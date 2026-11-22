@@ -1,5 +1,8 @@
 .idea/
 .gradle/
+__pycache__/
+*.py[cod]
+.pytest_cache/
 **/build/
 local.properties
 *.iml
@@ -15,5 +18,10 @@ local.properties
 node_modules/
 windows-studio/dist/
 windows-studio/build/
+windows-studio/.env
+*.pfx
+*.p12
+*.cer
+*.p7b
 downloads/*.exe
 downloads/*.apk

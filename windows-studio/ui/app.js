@@ -445,6 +445,13 @@
 
   btnStop.addEventListener('click', () => stopAll().catch((e) => showErr(e.message)));
 
+  const appVersionLine = document.getElementById('appVersionLine');
+  const shownVersion = (window.TT_STUDIO && window.TT_STUDIO.version) || '';
+  if (appVersionLine && shownVersion) {
+    appVersionLine.hidden = false;
+    appVersionLine.textContent = 'Version ' + shownVersion;
+  }
+
   authCheck().catch((e) => {
     sessionStatus.textContent = 'Impossible d’analyser les sessions : ' + (e.message || e);
   });
