@@ -5,8 +5,8 @@
     "version": "1.0.0",
     "package": "cd.tictachebdo.live",
     "github": "https://github.com/stickrdc/tictac-live",
-    "download": "https://github.com/stickrdc/tictac-live/releases/latest/download/TICTAC-LIVE.apk",
-    "fallback": "https://tictachebdo.cd/wp-content/uploads/tictac-live/TICTAC-LIVE.apk",
+    "download": "https://tictachebdo.cd/wp-content/uploads/tictac-live/TICTAC-LIVE.apk",
+    "github_release": "https://github.com/stickrdc/tictac-live/releases/latest/download/TICTAC-LIVE.apk",
     "audience": "reporter"
   },
   "windows_studio": {
@@ -14,8 +14,8 @@
     "platform": "windows",
     "version": "1.0.0",
     "github": "https://github.com/stickrdc/tictac-live",
-    "download": "https://github.com/stickrdc/tictac-live/releases/latest/download/TICTAC-Studio-Regie.exe",
-    "fallback": "https://tictachebdo.cd/wp-content/uploads/tictac-live/TICTAC-Studio-Regie.exe",
+    "download": "https://tictachebdo.cd/wp-content/uploads/tictac-live/TICTAC-Studio-Regie.exe",
+    "github_release": "https://github.com/stickrdc/tictac-live/releases/latest/download/TICTAC-Studio-Regie.exe",
     "audience": "admin"
   }
 }
