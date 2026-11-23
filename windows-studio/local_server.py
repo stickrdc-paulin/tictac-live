@@ -1,19 +1,21 @@
 # -*- coding: utf-8 -*-
-"""Serveur local : UI régie + proxy API WordPress authentifié + cache offline."""
+"""Serveur local : UI régie + proxy API WordPress + cache offline + radio locale."""
 from __future__ import annotations
 
 import json
+import mimetypes
 import sys
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
-from urllib.parse import unquote, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
 import requests
 
 from auth_session import (
     API,
+    APP_DIR,
     APP_VERSION,
     SITE,
     clear_all_local_session,
@@ -28,6 +30,24 @@ from auth_session import (
     save_cookies,
     save_reporters_cache,
     sync_reporters,
+)
+from radio_engine import ENGINE, find_ffmpeg, test_stream_endpoint
+from radio_store import (
+    create_playlist,
+    delete_media,
+    get_active_playlist,
+    import_media_file,
+    list_media,
+    load_jingle_schedule,
+    load_playlists,
+    load_stream_config,
+    public_stream_config,
+    resolve_media_path,
+    get_media,
+    save_stream_config,
+    set_active_playlist,
+    update_jingle_schedule,
+    update_playlist,
 )
 
 
@@ -102,7 +122,8 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self) -> None:  # noqa: N802
-        path = urlparse(self.path).path
+        parsed = urlparse(self.path)
+        path = parsed.path
         if path == "/version":
             return self._json(200, {"ok": True, "version": APP_VERSION, "name": "TICTAC Studio Regie"})
         if path in ("/", "/index.html"):
@@ -120,13 +141,29 @@ class Handler(BaseHTTPRequestHandler):
             )
         if path == "/reporters/cache":
             return self._reporters_from_cache()
+        if path == "/stream/config":
+            return self._json(200, {"ok": True, "config": public_stream_config()})
+        if path == "/stream/status":
+            return self._json(200, ENGINE.status())
+        if path == "/media":
+            qs = parse_qs(parsed.query)
+            kind = (qs.get("kind") or [None])[0]
+            return self._json(200, {"ok": True, "items": list_media(kind=kind)})
+        if path.startswith("/media/file/"):
+            return self._media_file(unquote(path[len("/media/file/") :]))
+        if path == "/playlists":
+            data = load_playlists()
+            return self._json(200, {"ok": True, **data, "active": get_active_playlist()})
+        if path == "/jingles/schedule":
+            return self._json(200, {"ok": True, "schedule": load_jingle_schedule()})
+        if path == "/radio/status":
+            return self._json(200, ENGINE.status())
         if path.startswith("/ui/"):
             rel = unquote(path[4:])
         elif path.startswith("/"):
             rel = unquote(path.lstrip("/"))
         else:
             rel = ""
-        # static under ui/
         candidate = (UI_DIR / rel).resolve()
         if str(candidate).startswith(str(UI_DIR.resolve())) and candidate.is_file():
             ctype = "application/octet-stream"
@@ -140,6 +177,16 @@ class Handler(BaseHTTPRequestHandler):
                 ctype = "image/svg+xml"
             return self._file(candidate, ctype)
         self._json(404, {"ok": False, "error": "Introuvable"})
+
+    def _media_file(self, media_id: str) -> None:
+        item = get_media(media_id)
+        if not item:
+            return self._json(404, {"ok": False, "error": "Média introuvable"})
+        path = resolve_media_path(item)
+        if not path:
+            return self._json(404, {"ok": False, "error": "Fichier manquant"})
+        ctype = mimetypes.guess_type(str(path))[0] or "application/octet-stream"
+        return self._file(path, ctype)
 
     def _file(self, path: Path, content_type: str) -> None:
         data = path.read_bytes()
@@ -167,6 +214,42 @@ class Handler(BaseHTTPRequestHandler):
             return self._reporters_sync()
         if path in ("/api", "/api.php", "/direct/api.php"):
             return self._proxy_api()
+
+        # —— Radio locale (pas de WP) ——
+        if path == "/stream/config":
+            return self._stream_config_save()
+        if path == "/stream/test":
+            return self._stream_test()
+        if path == "/stream/start":
+            return self._json(200, ENGINE.start_stream())
+        if path == "/stream/stop":
+            return self._json(200, ENGINE.stop_stream())
+        if path == "/radio/play":
+            body = self._read_json()
+            return self._json(200, ENGINE.play(stream=bool(body.get("stream"))))
+        if path == "/radio/stop":
+            return self._json(200, ENGINE.stop())
+        if path == "/radio/skip":
+            return self._json(200, ENGINE.skip())
+        if path == "/radio/pause":
+            return self._json(200, ENGINE.pause())
+        if path == "/media/import":
+            return self._media_import()
+        if path == "/media/delete":
+            return self._media_delete()
+        if path == "/playlists/update":
+            return self._playlist_update()
+        if path == "/playlists/mode":
+            return self._playlist_mode()
+        if path == "/playlists/active":
+            return self._playlist_active()
+        if path == "/playlists/create":
+            return self._playlist_create()
+        if path == "/jingles/schedule":
+            return self._jingles_schedule_save()
+        if path == "/jingles/fire":
+            return self._jingles_fire()
+
         self._json(404, {"ok": False, "error": "Route inconnue"})
 
     def _auth_check(self) -> None:
@@ -191,7 +274,7 @@ class Handler(BaseHTTPRequestHandler):
         body = self._read_json()
         user = str(body.get("username") or "").strip()
         password = str(body.get("password") or "")
-        if not user or not password:
+        if not user or password == "":
             return self._json(400, {"ok": False, "error": "Identifiant et mot de passe requis"})
         if not network_reachable():
             return self._json(
@@ -405,8 +488,105 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(raw)
 
+    def _stream_config_save(self) -> None:
+        body = self._read_json()
+        cfg = save_stream_config(body.get("config") or body)
+        pub = public_stream_config()
+        ffmpeg = find_ffmpeg(str(cfg.get("ffmpeg_path") or ""))
+        self._json(200, {"ok": True, "config": pub, "ffmpeg_found": bool(ffmpeg)})
+
+    def _stream_test(self) -> None:
+        body = self._read_json()
+        if body.get("config"):
+            # Test temporaire sans forcément sauver le password masqué
+            cfg = load_stream_config()
+            tmp = dict(cfg)
+            for k, v in (body.get("config") or {}).items():
+                if k == "password" and (not v or v == "••••••••"):
+                    continue
+                tmp[k] = v
+            result = test_stream_endpoint(tmp)
+        else:
+            result = test_stream_endpoint(load_stream_config())
+        code = 200 if result.get("ok") else 502
+        self._json(code, result)
+
+    def _media_import(self) -> None:
+        body = self._read_json()
+        src = str(body.get("path") or "").strip()
+        kind = str(body.get("kind") or "song")
+        title = body.get("title")
+        if not src:
+            return self._json(400, {"ok": False, "error": "Chemin fichier requis"})
+        try:
+            item = import_media_file(src, kind=kind, title=str(title) if title else None)
+        except FileNotFoundError as e:
+            return self._json(404, {"ok": False, "error": str(e)})
+        except ValueError as e:
+            return self._json(400, {"ok": False, "error": str(e)})
+        except Exception as e:
+            return self._json(500, {"ok": False, "error": str(e)})
+        self._json(200, {"ok": True, "item": item})
+
+    def _media_delete(self) -> None:
+        body = self._read_json()
+        mid = str(body.get("id") or "").strip()
+        if not mid:
+            return self._json(400, {"ok": False, "error": "id requis"})
+        ok = delete_media(mid)
+        self._json(200 if ok else 404, {"ok": ok, "error": "" if ok else "Introuvable"})
+
+    def _playlist_update(self) -> None:
+        body = self._read_json()
+        pid = str(body.get("id") or (get_active_playlist() or {}).get("id") or "").strip()
+        try:
+            pl = update_playlist(pid, body)
+        except KeyError:
+            return self._json(404, {"ok": False, "error": "Playlist introuvable"})
+        self._json(200, {"ok": True, "playlist": pl})
+
+    def _playlist_mode(self) -> None:
+        body = self._read_json()
+        pid = str(body.get("id") or (get_active_playlist() or {}).get("id") or "").strip()
+        try:
+            pl = update_playlist(pid, {"play_mode": body.get("play_mode")})
+        except KeyError:
+            return self._json(404, {"ok": False, "error": "Playlist introuvable"})
+        self._json(200, {"ok": True, "playlist": pl})
+
+    def _playlist_active(self) -> None:
+        body = self._read_json()
+        pid = str(body.get("id") or "").strip()
+        try:
+            pl = set_active_playlist(pid)
+        except KeyError:
+            return self._json(404, {"ok": False, "error": "Playlist introuvable"})
+        self._json(200, {"ok": True, "playlist": pl})
+
+    def _playlist_create(self) -> None:
+        body = self._read_json()
+        pl = create_playlist(str(body.get("name") or "Playlist"))
+        self._json(200, {"ok": True, "playlist": pl})
+
+    def _jingles_schedule_save(self) -> None:
+        body = self._read_json()
+        sched = update_jingle_schedule(body.get("schedule") or body)
+        self._json(200, {"ok": True, "schedule": sched})
+
+    def _jingles_fire(self) -> None:
+        body = self._read_json()
+        mid = str(body.get("id") or "").strip()
+        result = ENGINE.fire_jingle(mid)
+        code = 200 if result.get("ok") else 400
+        self._json(code, result)
+
 
 def start_server(port: int = 0) -> tuple[ThreadingHTTPServer, int]:
+    # Garantir dossiers média
+    try:
+        APP_DIR.mkdir(parents=True, exist_ok=True)
+    except Exception:
+        pass
     httpd = ThreadingHTTPServer(("127.0.0.1", port), Handler)
     host, real_port = httpd.server_address
     thread = threading.Thread(target=httpd.serve_forever, daemon=True)

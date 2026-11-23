@@ -23,5 +23,7 @@ windows-studio/.env
 *.p12
 *.cer
 *.p7b
+windows-studio/**/__pycache__/
+**/__pycache__/
 downloads/*.exe
 downloads/*.apk

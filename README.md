@@ -77,4 +77,5 @@ Les boutons WordPress (`stick-tth-live-apps.php`) pointent vers ces URLs version
 ## Streaming public
 
 Écoute : `https://video2.getstreamhosting.com/radio/8000/stream`  
-Le mot de passe SOURCE Icecast n’est **jamais** dans les apps.
+
+Encodeur : onglet **Diffusion** de TICTAC Studio Regie (config locale `%LOCALAPPDATA%\TICTAC-Studio\stream_config.json`, ffmpeg requis) ou BUTT/Mixxx. Le mot de passe SOURCE Icecast n’est **jamais** dans le dépôt ni l’APK (uniquement config locale régie si renseigné).

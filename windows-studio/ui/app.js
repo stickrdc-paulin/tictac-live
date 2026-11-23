@@ -97,6 +97,9 @@
       ? ('Connecté : ' + auth.displayName + (offlineSession ? ' (hors ligne)' : ''))
       : (offlineSession ? 'Session régie (cache hors ligne)' : 'Session régie active');
     bootStudio();
+    if (window.TTRadio && typeof window.TTRadio.boot === 'function') {
+      window.TTRadio.boot();
+    }
   }
 
   async function fetchNetworkStatus() {

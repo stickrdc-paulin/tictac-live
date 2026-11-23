@@ -11,8 +11,12 @@
     <header class="hero">
       <p class="eyebrow">TIC-TAC Hebdo</p>
       <h1>TICTAC Studio</h1>
+<<<<<<< HEAD
       <p class="lead">Régie audio — reporters terrain uniquement. Pas de site web.</p>
       <p class="meta-line" id="appVersionLine" hidden></p>
+=======
+      <p class="lead">Régie audio — reporters, playlists et diffusion. Pas de site web.</p>
+>>>>>>> origin/cursor/shoutcast-playlists-jingles-6e43
     </header>
     <section class="card" id="sessionBox">
       <p class="status" id="sessionStatus">Analyse des sessions locales…</p>
@@ -34,10 +38,14 @@
     <header class="bar">
       <div>
         <p class="eyebrow">Régie</p>
-        <h1>Reporters connectés</h1>
+        <h1 id="studioTitle">Reporters connectés</h1>
       </div>
       <div class="bar-actions">
+<<<<<<< HEAD
         <span class="pill" id="netStatus" title="État réseau">Réseau…</span>
+=======
+        <span class="pill" id="airNow" title="À l’antenne">—</span>
+>>>>>>> origin/cursor/shoutcast-playlists-jingles-6e43
         <span class="pill" id="listenStatus">En attente…</span>
         <button type="button" class="btn ghost" id="btnSync">Sync reporteurs</button>
         <button type="button" class="btn ghost" id="btnStop" hidden>Tout couper</button>
@@ -48,19 +56,134 @@
     <p class="meta-line" id="authLine"></p>
     <p class="meta-line" id="cacheLine"></p>
 
-    <label class="mode">
-      <span>Écoute automatique</span>
-      <select id="autoMode">
-        <option value="3">Auto — jusqu’à 3</option>
-        <option value="1">Auto — 1 seul</option>
-        <option value="0">Manuel</option>
-      </select>
-    </label>
+    <nav class="tabs" id="studioTabs" aria-label="Sections régie">
+      <button type="button" class="tab is-active" data-tab="reporters">Reporteurs</button>
+      <button type="button" class="tab" data-tab="playlist">Playlist</button>
+      <button type="button" class="tab" data-tab="jingles">Jingles</button>
+      <button type="button" class="tab" data-tab="stream">Diffusion</button>
+    </nav>
 
+<<<<<<< HEAD
     <div id="audioMix" class="audio-mix" aria-label="Mix audio"></div>
     <ul id="reporterList" class="reporter-list"></ul>
     <p class="empty" id="emptyHint">Aucun reporteur en cache ni en ligne. Connectez le PC et lancez une sync.</p>
     <p class="err" id="err" hidden></p>
+=======
+    <section class="now-playing card" id="nowPlaying" hidden>
+      <p class="eyebrow">À l’antenne</p>
+      <p class="np-current"><strong id="npCurrent">—</strong></p>
+      <p class="np-next meta-line">À suivre : <span id="npNext">—</span></p>
+      <p class="meta-line" id="npMeta"></p>
+      <div class="transport">
+        <button type="button" class="btn ghost btn-compact" id="btnRadioPlay">Lecture</button>
+        <button type="button" class="btn ghost btn-compact" id="btnRadioSkip">Suivant</button>
+        <button type="button" class="btn ghost btn-compact" id="btnRadioStop">Stop</button>
+      </div>
+    </section>
+
+    <div id="panel-reporters" class="tab-panel">
+      <label class="mode">
+        <span>Écoute automatique</span>
+        <select id="autoMode">
+          <option value="3">Auto — jusqu’à 3</option>
+          <option value="1">Auto — 1 seul</option>
+          <option value="0">Manuel</option>
+        </select>
+      </label>
+      <div id="audioMix" class="audio-mix" aria-label="Mix audio"></div>
+      <ul id="reporterList" class="reporter-list"></ul>
+      <p class="empty" id="emptyHint">Aucun reporter en ligne pour le moment.</p>
+      <p class="err" id="err" hidden></p>
+    </div>
+
+    <div id="panel-playlist" class="tab-panel" hidden>
+      <div class="card form">
+        <h2>Playlist antenne</h2>
+        <p class="hint">Inspiration My Radiomatisme : file + modes de lecture (ordre / aléatoire / cycle mélangé).</p>
+        <label for="playMode">Mode de lecture</label>
+        <select id="playMode">
+          <option value="sequential">Ordre (sequential)</option>
+          <option value="random">Aléatoire (random)</option>
+          <option value="shuffle_cycle">Cycle mélangé (shuffle_cycle)</option>
+        </select>
+        <label class="check-row"><input type="checkbox" id="plLoop" checked> Boucle</label>
+        <label for="importSongPath">Importer un fichier (chemin local)</label>
+        <div class="row-actions">
+          <input id="importSongPath" placeholder="C:\Musique\titre.mp3">
+          <button type="button" class="btn ghost btn-compact" id="btnImportSong">Importer</button>
+        </div>
+        <button type="button" class="btn ghost btn-compact" id="btnSavePlaylist">Enregistrer la file</button>
+        <p class="err" id="plErr" hidden></p>
+      </div>
+      <ul id="playlistItems" class="media-list"></ul>
+      <p class="empty" id="plEmpty">Aucun titre. Importez des fichiers audio.</p>
+    </div>
+
+    <div id="panel-jingles" class="tab-panel" hidden>
+      <div class="card form">
+        <h2>Jingles</h2>
+        <p class="hint">Cartouche + inserts entre titres / horaires (logique My Radiomatisme).</p>
+        <label for="importJinglePath">Importer un jingle (chemin local)</label>
+        <div class="row-actions">
+          <input id="importJinglePath" placeholder="C:\Jingles\ident.mp3">
+          <button type="button" class="btn ghost btn-compact" id="btnImportJingle">Importer</button>
+        </div>
+        <label class="check-row"><input type="checkbox" id="btEnabled"> Insert entre titres</label>
+        <label for="btEvery">Tous les N titres</label>
+        <input id="btEvery" type="number" min="1" value="3">
+        <label for="btPick">Tirage du pool</label>
+        <select id="btPick">
+          <option value="random">Aléatoire</option>
+          <option value="sequential">Ordre</option>
+        </select>
+        <label for="clockTime">Horaire (HH:MM)</label>
+        <div class="row-actions">
+          <input id="clockTime" placeholder="08:00">
+          <button type="button" class="btn ghost btn-compact" id="btnAddClock">Ajouter horaire</button>
+        </div>
+        <button type="button" class="btn ghost btn-compact" id="btnSaveJingles">Enregistrer programmation</button>
+        <p class="err" id="jgErr" hidden></p>
+      </div>
+      <div id="jingleCart" class="cartouche"></div>
+      <ul id="jingleList" class="media-list"></ul>
+      <ul id="clockList" class="media-list"></ul>
+    </div>
+
+    <div id="panel-stream" class="tab-panel" hidden>
+      <div class="card form" id="streamForm">
+        <h2>Diffusion Icecast / Shoutcast</h2>
+        <p class="hint">Config locale uniquement (jamais envoyée à tictachebdo.cd). Prod TIC-TAC : Icecast.</p>
+        <label for="stProtocol">Protocole</label>
+        <select id="stProtocol">
+          <option value="icecast">Icecast (recommandé)</option>
+          <option value="shoutcast">Shoutcast</option>
+        </select>
+        <label for="stHost">Host</label>
+        <input id="stHost" autocomplete="off">
+        <label for="stPort">Port</label>
+        <input id="stPort" type="number" min="1" max="65535">
+        <label for="stMount">Mount</label>
+        <input id="stMount" placeholder="/stream">
+        <label for="stUser">Utilisateur</label>
+        <input id="stUser" autocomplete="off">
+        <label for="stPass">Mot de passe SOURCE</label>
+        <input id="stPass" type="password" autocomplete="new-password" placeholder="••••••••">
+        <label for="stBitrate">Bitrate (kbps)</label>
+        <input id="stBitrate" type="number" min="32" max="320" value="128">
+        <label for="stFfmpeg">Chemin ffmpeg (optionnel)</label>
+        <input id="stFfmpeg" placeholder="laisser vide = PATH">
+        <label class="check-row"><input type="checkbox" id="stSsl"> SSL</label>
+        <div class="row-actions wrap">
+          <button type="button" class="btn ghost btn-compact" id="btnSaveStream">Enregistrer</button>
+          <button type="button" class="btn ghost btn-compact" id="btnTestStream">Tester</button>
+          <button type="button" class="btn primary btn-compact" id="btnStartStream">Démarrer diffusion</button>
+          <button type="button" class="btn ghost btn-compact" id="btnStopStream">Arrêter</button>
+        </div>
+        <p class="meta-line" id="stStatus">Statut : —</p>
+        <p class="err" id="stErr" hidden></p>
+      </div>
+    </div>
+>>>>>>> origin/cursor/shoutcast-playlists-jingles-6e43
   </div>
 
   <script>
@@ -69,5 +192,6 @@
   </script>
   <script src="/tt-direct.js"></script>
   <script src="/app.js"></script>
+  <script src="/radio.js"></script>
 </body>
 </html>
