@@ -2,20 +2,26 @@
   "android": {
     "name": "TICTAC LIVE",
     "platform": "android",
-    "version": "1.0.0",
+    "version": "1.1.0",
+    "versionCode": 10100,
     "package": "cd.tictachebdo.live",
+    "filename": "TICTAC-LIVE-1.1.0.apk",
     "github": "https://github.com/stickrdc-paulin/tictac-live",
-    "download": "https://tictachebdo.cd/wp-content/uploads/tictac-live/TICTAC-LIVE.apk",
-    "github_release": "https://github.com/stickrdc-paulin/tictac-live/releases/latest/download/TICTAC-LIVE.apk",
-    "audience": "reporter"
+    "download": "https://github.com/stickrdc-paulin/tictac-live/releases/latest/download/TICTAC-LIVE.apk",
+    "github_release": "https://github.com/stickrdc-paulin/tictac-live/releases/latest/download/TICTAC-LIVE-1.1.0.apk",
+    "audience": "reporter",
+    "host": "github"
   },
   "windows_studio": {
     "name": "TICTAC Studio Regie",
     "platform": "windows",
-    "version": "1.0.0",
+    "version": "1.1.0",
+    "filename": "TICTAC-Studio-Regie-1.1.0.exe",
     "github": "https://github.com/stickrdc-paulin/tictac-live",
-    "download": "https://tictachebdo.cd/wp-content/uploads/tictac-live/TICTAC-Studio-Regie.exe",
-    "github_release": "https://github.com/stickrdc-paulin/tictac-live/releases/latest/download/TICTAC-Studio-Regie.exe",
-    "audience": "admin"
+    "download": "https://github.com/stickrdc-paulin/tictac-live/releases/latest/download/TICTAC-Studio-Regie.exe",
+    "github_release": "https://github.com/stickrdc-paulin/tictac-live/releases/latest/download/TICTAC-Studio-Regie-1.1.0.exe",
+    "audience": "admin",
+    "host": "github",
+    "update_note": "Site + Studio lisent GitHub Releases API ; index.json = secours. Pas de binaire Verpex."
   }
 }

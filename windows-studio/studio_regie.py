@@ -17,6 +17,7 @@ import threading
 import time
 from pathlib import Path
 
+from app_update import get_update_status
 from auth_session import APP_DIR, APP_VERSION
 from local_server import start_server
 
@@ -140,9 +141,18 @@ def ensure_installed() -> Path | None:
     return canonical if canonical.is_file() else None
 
 
+def _bg_prefetch_update() -> None:
+    """Précharge le statut GitHub Releases pour l’UI (/update). Hors ligne = silencieux."""
+    try:
+        get_update_status(force=True)
+    except Exception:
+        pass
+
+
 def main() -> int:
     _kill_other_instances()
     ensure_installed()
+    threading.Thread(target=_bg_prefetch_update, daemon=True).start()
 
     try:
         import webview

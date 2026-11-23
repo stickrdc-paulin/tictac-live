@@ -15,6 +15,7 @@ a = Analysis(
         (str(UI / "tt-direct.js"), "ui"),
     ],
     hiddenimports=[
+        "app_update",
         "auth_session",
         "local_server",
         "browser_cookie3",
