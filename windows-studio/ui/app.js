@@ -665,12 +665,34 @@
 
   btnStop.addEventListener('click', () => stopAll().catch((e) => showErr(e.message)));
 
-  const appVersionLine = document.getElementById('appVersionLine');
-  const shownVersion = (window.TT_STUDIO && window.TT_STUDIO.version) || '';
-  if (appVersionLine && shownVersion) {
-    appVersionLine.hidden = false;
-    appVersionLine.textContent = 'Version ' + shownVersion;
+  async function checkAppUpdate() {
+    const banner = document.getElementById('updateBanner');
+    const textEl = document.getElementById('updateBannerText');
+    const linkEl = document.getElementById('updateBannerLink');
+    const verLine = document.getElementById('appVersionLine');
+    if (!banner || !textEl || !linkEl) return;
+    try {
+      const res = await fetch('/update');
+      const data = await res.json();
+      if (verLine && data && data.local) {
+        verLine.hidden = false;
+        verLine.textContent = 'Version ' + data.local;
+      }
+      // Hors ligne ou à jour : rien (pas de faux positif).
+      if (!data || !data.available || !data.download) {
+        banner.hidden = true;
+        return;
+      }
+      textEl.textContent = data.message
+        || ('Mise à jour ' + data.remote + ' disponible (vous avez ' + data.local + ').');
+      linkEl.href = data.download;
+      banner.hidden = false;
+    } catch (_) {
+      banner.hidden = true;
+    }
   }
+
+  checkAppUpdate().catch(() => {});
 
   authCheck().catch((e) => {
     sessionStatus.textContent = 'Impossible d’analyser les sessions : ' + (e.message || e);

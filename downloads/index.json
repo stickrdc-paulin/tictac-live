@@ -7,7 +7,7 @@
     "package": "cd.tictachebdo.live",
     "filename": "TICTAC-LIVE-1.1.0.apk",
     "github": "https://github.com/stickrdc-paulin/tictac-live",
-    "download": "https://github.com/stickrdc-paulin/tictac-live/releases/latest/download/TICTAC-LIVE-1.1.0.apk",
+    "download": "https://github.com/stickrdc-paulin/tictac-live/releases/latest/download/TICTAC-LIVE.apk",
     "github_release": "https://github.com/stickrdc-paulin/tictac-live/releases/latest/download/TICTAC-LIVE-1.1.0.apk",
     "audience": "reporter",
     "host": "github"
@@ -18,10 +18,10 @@
     "version": "1.1.0",
     "filename": "TICTAC-Studio-Regie-1.1.0.exe",
     "github": "https://github.com/stickrdc-paulin/tictac-live",
-    "download": "https://github.com/stickrdc-paulin/tictac-live/releases/latest/download/TICTAC-Studio-Regie-1.1.0.exe",
+    "download": "https://github.com/stickrdc-paulin/tictac-live/releases/latest/download/TICTAC-Studio-Regie.exe",
     "github_release": "https://github.com/stickrdc-paulin/tictac-live/releases/latest/download/TICTAC-Studio-Regie-1.1.0.exe",
     "audience": "admin",
     "host": "github",
-    "update_note": "Aucun binaire sur Verpex — GitHub Releases uniquement."
+    "update_note": "Site + Studio lisent GitHub Releases API ; index.json = secours. Pas de binaire Verpex."
   }
 }

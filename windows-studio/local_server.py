@@ -13,6 +13,7 @@ from urllib.parse import parse_qs, unquote, urlparse
 
 import requests
 
+from app_update import get_update_status
 from auth_session import (
     API,
     APP_DIR,
@@ -125,7 +126,13 @@ class Handler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         path = parsed.path
         if path == "/version":
-            return self._json(200, {"ok": True, "version": APP_VERSION, "name": "TICTAC Studio Regie"})
+            return self._json(
+                200,
+                {"ok": True, "version": APP_VERSION, "name": "TICTAC Studio Regie"},
+            )
+        if path == "/update":
+            # Hors ligne → available=False (pas de faux positif bloquant).
+            return self._json(200, get_update_status(force=False))
         if path in ("/", "/index.html"):
             return self._index()
         if path == "/network/status":

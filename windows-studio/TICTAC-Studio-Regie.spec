@@ -18,6 +18,7 @@ a = Analysis(
         (str(ROOT / "VERSION"), "."),
     ],
     hiddenimports=[
+        "app_update",
         "auth_session",
         "app_update",
         "local_server",

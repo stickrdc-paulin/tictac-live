@@ -1,30 +1,49 @@
-# Téléchargements versionnés et mises à jour
+﻿# Téléchargements versionnés et mises à jour
 
-Complète la doc signature / version Setup (`studio-signing`) : noms de fichiers, `index.json`, MAJ depuis une ancienne install.
+## Principe : une Release GitHub suffit
 
-## Fichiers publiés (1.1.0)
+Publier une **GitHub Release** (tag `vX.Y.Z` + assets) met à jour en même temps :
 
-| Artefact | Nom |
-|----------|-----|
-| APK Android | `TICTAC-LIVE-1.1.0.apk` |
-| Setup Windows | `TICTAC-Studio-Regie-Setup-1.1.0.exe` |
-| EXE portable (miroir) | `TICTAC-Studio-Regie.exe` |
-| Catalogue | `downloads/index.json` |
+1. **Mon compte** (WordPress) — liens + libellés de version via l'API Releases (cache 6 h)
+2. **TICTAC Studio (Windows)** — check in-app `GET /update` → GitHub Releases
+3. **Secours** — `downloads/index.json` (raw GitHub) si l'API est indisponible
 
-Bump : éditer `android-shell/VERSION` et/ou `windows-studio/VERSION`, rebuild (`android-shell/build-release.ps1`, `windows-studio/build-release.bat`), republier les artefacts **et** `index.json` (GitHub + `wp-content/uploads/tictac-live/`).
+**Pas** de re-upload Verpex des EXE/APK.  
+**Pas** d'édition manuelle du plugin WP à chaque bump.
 
-## Windows — ancienne install → nouvelle
+## Assets à joindre à chaque Release
 
-1. **Setup** : même `AppId` Inno + `UsePreviousAppDir=yes` + `CloseApplications=yes` → mise à jour de `%LOCALAPPDATA%\TICTAC-Studio` sans seconde entrée « Programmes ».
-2. **EXE portable** : `ensure_installed()` copie vers le dossier canonique si version / taille différente.
-3. **Check distant** : `app_update.py` lit `index.json` (site puis raw GitHub) ; si `windows_studio.version` > version locale, ouvre l’URL Setup versionnée.
+| Rôle | Nom (obligatoire) | Optionnel versionné |
+|------|-------------------|---------------------|
+| APK stable (site + `latest/download`) | `TICTAC-LIVE.apk` | `TICTAC-LIVE-X.Y.Z.apk` |
+| EXE stable Windows | `TICTAC-Studio-Regie.exe` | `TICTAC-Studio-Regie-X.Y.Z.exe` |
+| Setup Inno (si build) | — | `TICTAC-Studio-Regie-Setup-X.Y.Z.exe` |
 
-## Android — ancienne install → nouvelle
+Les URLs stables `releases/latest/download/TICTAC-LIVE.apk` et `…/TICTAC-Studio-Regie.exe` ne changent **jamais** de chemin : seul le fichier derrière `latest` change.
 
-1. Même `applicationId` (`cd.tictachebdo.live`).
-2. `versionCode` dérivé du semver (1.1.0 → 10100) > ancien (1.0.0 → 1 ou 10000).
-3. `UpdateChecker` ouvre l’URL APK versionnée si `index.json` annonce plus récent.
+## Flux de publication
 
-## WordPress
+1. Bump `windows-studio` / `android-shell` VERSION, rebuild.
+2. Créer la Release GitHub `vX.Y.Z` avec les assets (stables **et** versionnés).
+3. Mettre à jour `downloads/index.json` sur `main` (version + URLs) — secours catalogue.
+4. Rien à faire sur Verpex ni dans le mu-plugin (sauf premier déploiement du plugin dynamique).
 
-Plugin `stick-tth-live-apps.php` : constantes `STICK_TTH_LIVE_APPS_VERSION` + URLs `TICTAC-LIVE-<ver>.apk` / `TICTAC-Studio-Regie-Setup-<ver>.exe` (legacy non versionné en fallback).
+## Windows — check in-app
+
+- `windows-studio/app_update.py` interroge `api.github.com/.../releases/latest`.
+- Compare `tag_name` (sans `v`) à `APP_VERSION` locale.
+- UI : bandeau « Mise à jour disponible » + lien téléchargement (`/update`).
+- Hors ligne / erreur réseau → `available=false`, `offline=true` — **aucun** faux positif bloquant.
+- Ne force plus l'ouverture du navigateur au démarrage.
+
+## WordPress (Mon compte)
+
+Plugin `stick-tth-live-apps.php` (mu-plugin sur tictachebdo.cd) :
+
+- Catalogue : GitHub API → index.json → noms stables `latest/download`
+- Libellés : version lue dynamiquement (plus de constante produit hardcodée)
+- Transient `stick_tth_live_apps_catalog` (6 h)
+
+## Android
+
+`UpdateChecker` peut continuer à lire `index.json` ; les tuiles Mon compte pointent déjà GitHub `latest`.
