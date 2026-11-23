@@ -6,12 +6,15 @@
   const loginForm = document.getElementById('loginForm');
   const loginErr = document.getElementById('loginErr');
   const authLine = document.getElementById('authLine');
+  const cacheLine = document.getElementById('cacheLine');
+  const netStatus = document.getElementById('netStatus');
 
   const list = document.getElementById('reporterList');
   const emptyHint = document.getElementById('emptyHint');
   const listenStatus = document.getElementById('listenStatus');
   const btnStop = document.getElementById('btnStop');
   const btnLogout = document.getElementById('btnLogout');
+  const btnSync = document.getElementById('btnSync');
   const audioMix = document.getElementById('audioMix');
   const err = document.getElementById('err');
   const autoModeEl = document.getElementById('autoMode');
@@ -28,11 +31,17 @@
   const mixPrefs = new Map();
   let listTimer = 0;
   let clockTimer = 0;
+  let netTimer = 0;
   let autoBusy = false;
   let lastRows = [];
   let studioOpenedAt = Date.now();
   let keepAlive = null;
   let kickBusy = false;
+  let syncBusy = false;
+  let networkOk = false;
+  let onlineStatusAvailable = false;
+  let fromCache = false;
+  let offlineSession = false;
 
   function showErr(msg) {
     err.hidden = !msg;
@@ -44,29 +53,85 @@
     loginErr.textContent = msg || '';
   }
 
-  function showStudio(auth) {
+  function formatCacheTime(ts) {
+    const n = Number(ts) || 0;
+    if (!n) return '';
+    try {
+      return new Date(n * 1000).toLocaleString('fr-FR');
+    } catch (_) {
+      return '';
+    }
+  }
+
+  function setNetPill() {
+    if (!netStatus) return;
+    if (onlineStatusAvailable && networkOk) {
+      netStatus.textContent = 'Réseau OK — statut live';
+      netStatus.className = 'pill is-live';
+    } else if (fromCache || offlineSession) {
+      netStatus.textContent = 'Hors ligne — liste cache';
+      netStatus.className = 'pill is-offline';
+    } else {
+      netStatus.textContent = 'Réseau indisponible';
+      netStatus.className = 'pill is-offline';
+    }
+  }
+
+  function setCacheLine(extra) {
+    if (!cacheLine) return;
+    const parts = [];
+    if (offlineSession) parts.push('Session régie ouverte hors ligne (cache local)');
+    if (fromCache) parts.push('Liste reporteurs depuis le cache local');
+    if (extra) parts.push(extra);
+    if (!onlineStatusAvailable) {
+      parts.push('Statut en ligne indisponible sans réseau (internet ou LAN) + app téléphone');
+    }
+    cacheLine.textContent = parts.join(' · ');
+  }
+
+  function showStudio(auth, opts) {
+    offlineSession = !!(opts && opts.offline);
     viewLogin.hidden = true;
     viewStudio.hidden = false;
     authLine.textContent = auth && auth.displayName
-      ? ('Connecté : ' + auth.displayName)
-      : 'Session régie active';
+      ? ('Connecté : ' + auth.displayName + (offlineSession ? ' (hors ligne)' : ''))
+      : (offlineSession ? 'Session régie (cache hors ligne)' : 'Session régie active');
     bootStudio();
   }
 
+  async function fetchNetworkStatus() {
+    try {
+      const res = await fetch('/network/status', { cache: 'no-store' });
+      const data = await res.json();
+      networkOk = !!data.network;
+      onlineStatusAvailable = !!data.online_status_available;
+      return data;
+    } catch (_) {
+      networkOk = false;
+      onlineStatusAvailable = false;
+      return { network: false, online_status_available: false };
+    }
+  }
+
   async function authCheck() {
-    sessionStatus.textContent = 'Recherche d’une session admin déjà ouverte…';
+    sessionStatus.textContent = 'Recherche d’une session régie (locale ou navigateur)…';
     if (sessionHint) sessionHint.hidden = false;
     const res = await fetch('/auth/check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
     const data = await res.json();
+    networkOk = !!data.network;
     if (data.ok && data.auth && data.auth.studio) {
       const src = data.source || 'session';
       const who = data.auth.displayName || 'admin';
-      const label = src.indexOf('browser:') === 0
-        ? ('Session ' + src.replace('browser:', '') + ' trouvée (' + who + ') — ouverture…')
-        : ('Session app trouvée (' + who + ') — ouverture…');
-      sessionStatus.textContent = label;
+      if (data.offline) {
+        sessionStatus.textContent = 'Hors ligne — session cache (' + who + ') — ouverture…';
+      } else {
+        const label = src.indexOf('browser:') === 0
+          ? ('Session ' + src.replace('browser:', '') + ' trouvée (' + who + ') — ouverture…')
+          : ('Session app trouvée (' + who + ') — ouverture…');
+        sessionStatus.textContent = label;
+      }
       if (sessionHint) sessionHint.hidden = true;
-      showStudio(data.auth || {});
+      showStudio(data.auth || {}, { offline: !!data.offline });
       return;
     }
     if (sessionHint) sessionHint.hidden = false;
@@ -92,7 +157,7 @@
       });
       const data = await res.json();
       if (!data.ok) throw new Error(data.error || 'Connexion refusée');
-      showStudio(data.auth || {});
+      showStudio(data.auth || {}, { offline: false });
     } catch (e) {
       showLoginErr(e.message || 'Erreur de connexion');
     } finally {
@@ -104,6 +169,10 @@
     await stopAll().catch(() => {});
     await fetch('/auth/logout', { method: 'POST', body: '{}' });
     location.reload();
+  });
+
+  btnSync.addEventListener('click', () => {
+    syncReporters(true).catch((e) => showErr(e.message));
   });
 
   // —— Régie (adapté de studio.js) ——
@@ -169,28 +238,49 @@
     else if (n === 1) setListen('Écoute : ' + [...channels.values()][0].name, 'is-live');
     else setListen('Mix : ' + n + ' reporters', 'is-live');
     tickStudioClock();
+    setNetPill();
+  }
+
+  function presenceLabel(r) {
+    if (!onlineStatusAvailable || r.presence_unknown) {
+      return 'présence inconnue (pas de réseau)';
+    }
+    if (r.online === false && !(r.online_for > 0)) {
+      return 'hors ligne';
+    }
+    return 'en ligne ' + TtDirect.formatDuration(r.online_for || 0);
   }
 
   function renderList(rows) {
     lastRows = rows;
     list.innerHTML = '';
     emptyHint.hidden = rows.length > 0;
+    if (!rows.length) {
+      emptyHint.textContent = fromCache || !networkOk
+        ? 'Aucun reporteur en cache. Connectez le PC et lancez « Sync reporteurs ».'
+        : 'Aucun reporter en ligne pour le moment.';
+    }
     rows.forEach((r) => {
       const li = document.createElement('li');
       li.className = 'reporter-card';
       const active = channels.has(r.id);
       const ch = active ? channels.get(r.id) : null;
       const pref = getMixPref(r.id);
+      const presenceUnknown = !onlineStatusAvailable || !!r.presence_unknown;
 
       const btn = document.createElement('button');
       btn.type = 'button';
-      btn.className = 'reporter-main' + (active ? ' is-active' : '');
-      let meta = 'en ligne ' + TtDirect.formatDuration(r.online_for || 0);
+      btn.className = 'reporter-main' + (active ? ' is-active' : '') + (presenceUnknown ? ' is-unknown' : '');
+      let meta = presenceLabel(r);
       if (active) meta += ' · antenne ' + TtDirect.formatDuration(ch ? (Date.now() - ch.listenStartedAt) / 1000 : (r.listen_for || 0));
       btn.innerHTML = '<strong>' + escapeHtml(r.name) + '</strong><span class="meta">' + meta + '</span>'
         + (active ? '<span class="badge">À l’antenne</span>' : '');
       btn.addEventListener('click', () => {
         if (autoMode > 0 && !active) return;
+        if (!onlineStatusAvailable) {
+          showErr('Écoute live impossible hors réseau. Connectez le PC (internet ou LAN).');
+          return;
+        }
         toggleReporter(r);
       });
       li.appendChild(btn);
@@ -244,21 +334,27 @@
         li.appendChild(controls);
       }
 
-      const kickBtn = document.createElement('button');
-      kickBtn.type = 'button';
-      kickBtn.className = 'btn ghost btn-compact';
-      kickBtn.textContent = 'Terminer';
-      kickBtn.addEventListener('click', (ev) => {
-        ev.stopPropagation();
-        kickReporter(r).catch((e) => showErr(e.message));
-      });
-      li.appendChild(kickBtn);
+      if (onlineStatusAvailable) {
+        const kickBtn = document.createElement('button');
+        kickBtn.type = 'button';
+        kickBtn.className = 'btn ghost btn-compact';
+        kickBtn.textContent = 'Terminer';
+        kickBtn.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          kickReporter(r).catch((e) => showErr(e.message));
+        });
+        li.appendChild(kickBtn);
+      }
       list.appendChild(li);
     });
   }
 
   async function kickReporter(r) {
     if (!r || !r.id || kickBusy) return;
+    if (!onlineStatusAvailable) {
+      showErr('Action impossible hors réseau.');
+      return;
+    }
     if (!window.confirm('Terminer la session de « ' + (r.name || 'ce reporter') + ' » ?')) return;
     kickBusy = true;
     try {
@@ -274,15 +370,119 @@
     }
   }
 
+  function applyListPayload(data) {
+    fromCache = !!data.from_cache || !!data.offline;
+    networkOk = data.network !== false && !data.offline;
+    onlineStatusAvailable = !!data.online_status_available && networkOk;
+    if (typeof data.max_mix === 'number' && data.max_mix > 0) {
+      maxMix = data.max_mix;
+    }
+    const rows = data.reporters || [];
+    renderList(rows);
+    const when = formatCacheTime(data.saved_at);
+    setCacheLine(when ? ('Cache : ' + when) : '');
+    setNetPill();
+    return rows;
+  }
+
+  async function syncReporters(manual) {
+    if (syncBusy) return;
+    syncBusy = true;
+    if (btnSync) btnSync.disabled = true;
+    try {
+      const res = await fetch('/reporters/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: '{}',
+      });
+      const data = await res.json();
+      if (!data.ok && !(data.reporters && data.reporters.length)) {
+        throw new Error(data.error || 'Sync impossible');
+      }
+      const rows = applyListPayload(data);
+      if (onlineStatusAvailable) {
+        await syncAuto(rows);
+      } else {
+        updateStatus();
+      }
+      if (manual && data.error && data.from_cache) {
+        showErr(data.error);
+      } else if (manual) {
+        showErr('');
+      }
+      offlineSession = !networkOk;
+    } finally {
+      syncBusy = false;
+      if (btnSync) btnSync.disabled = false;
+    }
+  }
+
+  async function dropAllLiveChannels() {
+    for (const id of [...channels.keys()]) {
+      await dropChannel(id, false);
+    }
+  }
+
+  function scheduleListPolling(fast) {
+    clearInterval(listTimer);
+    listTimer = setInterval(() => {
+      refreshList().catch((e) => {
+        if (onlineStatusAvailable) showErr(e.message);
+      });
+    }, fast ? 2000 : 8000);
+  }
+
+  /**
+   * Applique les effets d’une transition réseau (reprise ou perte).
+   * Centralisé pour éviter la course entre listTimer et netTimer :
+   * refreshList() peut mettre onlineStatusAvailable à false avant que
+   * netTimer ne capture prev — les canaux live doivent quand même être coupés.
+   */
+  async function applyNetworkTransition(wasOnline, nowOnline) {
+    if (wasOnline === nowOnline) return;
+    if (!wasOnline && nowOnline) {
+      offlineSession = false;
+      scheduleListPolling(true);
+      syncReporters(false).catch(() => {});
+      setCacheLine('Réseau de retour — sync en cours');
+      return;
+    }
+    // Perte de réseau : stopper les polls WebRTC / signalisation
+    scheduleListPolling(false);
+    await dropAllLiveChannels();
+    updateStatus();
+    renderList(lastRows);
+    offlineSession = true;
+    setCacheLine('Réseau perdu — écoute live interrompue');
+  }
+
   async function refreshList() {
+    const wasOnline = onlineStatusAvailable;
+    await fetchNetworkStatus();
+    await applyNetworkTransition(wasOnline, onlineStatusAvailable);
+    if (!onlineStatusAvailable) {
+      // Hors ligne : lire le cache local, pas de poll live
+      try {
+        const res = await fetch('/reporters/cache', { cache: 'no-store' });
+        const data = await res.json();
+        applyListPayload(data);
+        updateStatus();
+      } catch (e) {
+        showErr(e.message || 'Cache reporteurs indisponible');
+      }
+      return;
+    }
     const data = await TtDirect.api('list_reporters', {});
-    maxMix = data.max_mix || cfg.maxMix || 3;
-    renderList(data.reporters || []);
-    await syncAuto(data.reporters || []);
+    const rows = applyListPayload(data);
+    await syncAuto(rows);
   }
 
   async function syncAuto(rows) {
     if (autoBusy) return;
+    if (!onlineStatusAvailable) {
+      updateStatus();
+      return;
+    }
     autoBusy = true;
     try {
       const online = new Set(rows.map((r) => r.id));
@@ -294,6 +494,8 @@
       for (const r of rows) {
         if (channels.size >= limit) break;
         if (channels.has(r.id)) continue;
+        // Ne pas auto-connecter un reporteur dont la présence est inconnue
+        if (r.presence_unknown) continue;
         try { await addChannel(r, false); } catch (e) { if (e && e.message) showErr(e.message); }
       }
       while (channels.size > limit) {
@@ -421,12 +623,13 @@
     keepAlive = TtDirect.createKeepAlive();
     showErr('');
     try {
+      await fetchNetworkStatus();
       cfg = await TtDirect.api('config');
       if (!cfg.auth || !cfg.auth.studio) {
         showErr('Session régie invalide. Déconnectez-vous puis reconnectez-vous.');
         return;
       }
-      maxMix = cfg.maxMix || 3;
+      maxMix = cfg.maxMix || cfg.max_mix || 3;
       window.TT_STUDIO.maxMix = maxMix;
       studioOpenedAt = Date.now();
       updateStatus();
@@ -435,9 +638,23 @@
       await keepAlive.start({ screenOn: true });
       autoModeEl.value = String(autoMode);
       autoModeEl.onchange = () => applyAutoMode(autoModeEl.value);
-      await refreshList();
-      clearInterval(listTimer);
-      listTimer = setInterval(() => refreshList().catch((e) => showErr(e.message)), 2000);
+
+      // Première sync si réseau ; sinon cache
+      if (onlineStatusAvailable) {
+        await syncReporters(false).catch(() => refreshList());
+      } else {
+        await refreshList();
+      }
+
+      scheduleListPolling(onlineStatusAvailable);
+
+      clearInterval(netTimer);
+      netTimer = setInterval(async () => {
+        const prev = onlineStatusAvailable;
+        await fetchNetworkStatus();
+        setNetPill();
+        await applyNetworkTransition(prev, onlineStatusAvailable);
+      }, 5000);
     } catch (ex) {
       showErr(ex.message || 'Impossible d’ouvrir la régie');
     }

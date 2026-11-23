@@ -3,9 +3,10 @@
 TICTAC Studio Regie — application Windows dédiée à la régie audio.
 
 - Écran login uniquement (pas le site web)
-- Réutilise automatiquement une session WordPress admin déjà ouverte
-- Sinon demande une nouvelle connexion
-- Affiche uniquement les reporters connectés et l’écoute studio (WebRTC)
+- S’ouvre hors ligne sur le PC (UI locale) ; internet seulement pour login / sync
+- Réutilise une session régie en cache ou une session WordPress admin navigateur
+- Liste des reporteurs mise en cache à la connexion ou à la sync
+- Statut « en ligne » seulement si le PC a internet ou LAN (+ app téléphone)
 """
 from __future__ import annotations
 
