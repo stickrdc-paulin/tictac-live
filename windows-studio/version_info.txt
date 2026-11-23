@@ -1,11 +1,12 @@
 # UTF-8
 #
-# Métadonnées Windows (Properties → Détails) pour TICTAC-Studio-Regie.exe.
-# Généré / aligné sur windows-studio/VERSION — ne pas diverger.
+# MÃ©tadonnÃ©es Windows (Properties â†’ DÃ©tails) pour TICTAC-Studio-Regie.exe.
+# GÃ©nÃ©rÃ© depuis windows-studio/VERSION (1.2.0) â€” ne pas Ã©diter Ã  la main ;
+# relancer Sync-VersionInfo.ps1 ou Build-Release.ps1.
 VSVersionInfo(
   ffi=FixedFileInfo(
-    filevers=(1, 1, 0, 0),
-    prodvers=(1, 1, 0, 0),
+    filevers=(1, 2, 0, 0),
+    prodvers=(1, 2, 0, 0),
     mask=0x3F,
     flags=0x0,
     OS=0x40004,
@@ -20,13 +21,13 @@ VSVersionInfo(
           '040C04B0',
           [
             StringStruct('CompanyName', 'STICK RDC SARLU'),
-            StringStruct('FileDescription', 'TICTAC Studio Regie — régie audio TIC-TAC Hebdo'),
-            StringStruct('FileVersion', '1.1.0'),
+            StringStruct('FileDescription', 'TICTAC Studio Regie â€” rÃ©gie audio TIC-TAC Hebdo'),
+            StringStruct('FileVersion', '1.2.0'),
             StringStruct('InternalName', 'TICTAC-Studio-Regie'),
             StringStruct('LegalCopyright', 'Copyright (C) STICK RDC SARLU'),
             StringStruct('OriginalFilename', 'TICTAC-Studio-Regie.exe'),
             StringStruct('ProductName', 'TICTAC Studio Regie'),
-            StringStruct('ProductVersion', '1.1.0'),
+            StringStruct('ProductVersion', '1.2.0'),
           ]
         )
       ]
