@@ -12,10 +12,11 @@
   "windows_studio": {
     "name": "TICTAC Studio Regie",
     "platform": "windows",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "github": "https://github.com/stickrdc-paulin/tictac-live",
     "download": "https://tictachebdo.cd/wp-content/uploads/tictac-live/TICTAC-Studio-Regie.exe",
     "github_release": "https://github.com/stickrdc-paulin/tictac-live/releases/latest/download/TICTAC-Studio-Regie.exe",
+    "setup_github_release": "https://github.com/stickrdc-paulin/tictac-live/releases/latest/download/TICTAC-Studio-Regie-Setup-1.1.0.exe",
     "audience": "admin"
   }
 }

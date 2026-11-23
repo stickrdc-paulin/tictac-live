@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import shutil
+import sys
 import tempfile
 import time
 from pathlib import Path
@@ -22,7 +23,26 @@ COOKIE_FILE = APP_DIR / "session.json"
 AUTH_CACHE_FILE = APP_DIR / "auth_cache.json"
 REPORTERS_CACHE_FILE = APP_DIR / "reporters_cache.json"
 CONFIG_CACHE_FILE = APP_DIR / "config_cache.json"
-APP_VERSION = "1.1.0"
+
+
+def _load_app_version() -> str:
+    """Lit windows-studio/VERSION (aussi embarqué dans le bundle PyInstaller)."""
+    candidates = [
+        Path(__file__).resolve().parent / "VERSION",
+        Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent)) / "VERSION",
+    ]
+    for path in candidates:
+        try:
+            if path.is_file():
+                text = path.read_text(encoding="utf-8").strip()
+                if text:
+                    return text.splitlines()[0].strip()
+        except OSError:
+            continue
+    return "1.1.0"
+
+
+APP_VERSION = _load_app_version()
 
 
 def _ensure_dir() -> None:

@@ -3,6 +3,7 @@ from pathlib import Path
 
 ROOT = Path(SPECPATH)
 UI = ROOT / "ui"
+VERSION_FILE = ROOT / "version_info.txt"
 
 a = Analysis(
     ["studio_regie.py"],
@@ -13,6 +14,7 @@ a = Analysis(
         (str(UI / "styles.css"), "ui"),
         (str(UI / "app.js"), "ui"),
         (str(UI / "tt-direct.js"), "ui"),
+        (str(ROOT / "VERSION"), "."),
     ],
     hiddenimports=[
         "auth_session",
@@ -50,4 +52,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    version=str(VERSION_FILE) if VERSION_FILE.is_file() else None,
 )

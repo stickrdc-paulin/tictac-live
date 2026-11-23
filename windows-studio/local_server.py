@@ -68,7 +68,7 @@ STATE = StudioState()
 
 
 class Handler(BaseHTTPRequestHandler):
-    server_version = "TICTACStudio/1.1"
+    server_version = f"TICTACStudio/{APP_VERSION}"
 
     def log_message(self, fmt: str, *args: Any) -> None:  # noqa: A003
         return
@@ -103,8 +103,10 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:  # noqa: N802
         path = urlparse(self.path).path
+        if path == "/version":
+            return self._json(200, {"ok": True, "version": APP_VERSION, "name": "TICTAC Studio Regie"})
         if path in ("/", "/index.html"):
-            return self._file(UI_DIR / "index.html", "text/html; charset=utf-8")
+            return self._index()
         if path == "/network/status":
             online = network_reachable()
             return self._json(
@@ -142,6 +144,14 @@ class Handler(BaseHTTPRequestHandler):
     def _file(self, path: Path, content_type: str) -> None:
         data = path.read_bytes()
         self._send(200, data, content_type)
+
+    def _index(self) -> None:
+        html = (UI_DIR / "index.html").read_text(encoding="utf-8")
+        marker = "window.TT_STUDIO = { pin: '', maxMix: 3 };"
+        injected = f"window.TT_STUDIO = {{ pin: '', maxMix: 3, version: {json.dumps(APP_VERSION)} }};"
+        if marker in html:
+            html = html.replace(marker, injected, 1)
+        self._send(200, html.encode("utf-8"), "text/html; charset=utf-8")
 
     def do_POST(self) -> None:  # noqa: N802
         path = urlparse(self.path).path

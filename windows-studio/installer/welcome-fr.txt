@@ -1,0 +1,8 @@
+TICTAC Studio Regie
+Installateur — régie audio TIC-TAC Hebdo (STICK RDC SARLU)
+
+La version exacte du produit apparaît sur l’écran d’accueil de cet assistant
+et dans les propriétés du fichier Setup (clic droit → Propriétés → Détails).
+
+Après installation, l’application est placée dans :
+%LOCALAPPDATA%\TICTAC-Studio\
