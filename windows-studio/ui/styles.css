@@ -104,7 +104,6 @@ h2 { margin: 0 0 .5rem; font-size: 1.15rem; }
 .err { color: var(--bad); margin-top: .75rem; }
 .audio-mix { position: absolute; width: 0; height: 0; overflow: hidden; }
 .status { margin: 0; color: var(--muted); }
-<<<<<<< HEAD
 
 .tabs {
   display: flex;
@@ -168,7 +167,7 @@ h2 { margin: 0 0 .5rem; font-size: 1.15rem; }
   font: inherit;
 }
 .btn.primary.btn-compact { width: auto; margin-top: 0; }
-=======
+
 .update-banner {
   display: flex;
   flex-wrap: wrap;
@@ -189,4 +188,3 @@ h2 { margin: 0 0 .5rem; font-size: 1.15rem; }
   min-width: 8rem;
   text-decoration: none;
 }
->>>>>>> origin/cursor/github-latest-update-c6d7
