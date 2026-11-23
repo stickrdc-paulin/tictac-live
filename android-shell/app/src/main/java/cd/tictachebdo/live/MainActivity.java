@@ -108,6 +108,7 @@ public class MainActivity extends AppCompatActivity {
         btnListen.setOnClickListener(v -> toggleListen());
         showListen();
         refreshStatus();
+        UpdateChecker.checkAsync(this);
     }
 
     private void showListen() {

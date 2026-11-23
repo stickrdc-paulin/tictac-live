@@ -96,6 +96,31 @@ if (-not $SkipSign) {
     & (Join-Path $PSScriptRoot 'Sign-Authenticode.ps1') $setup
 }
 
+# Miroir téléchargements versionnés (noms stables pour releases / site)
+$downloads = Join-Path (Split-Path -Parent $Root) 'downloads'
+if (Test-Path -LiteralPath $downloads) {
+    $setupName = "TICTAC-Studio-Regie-Setup-$version.exe"
+    Copy-Item -LiteralPath $setup -Destination (Join-Path $downloads $setupName) -Force
+    Copy-Item -LiteralPath $exe -Destination (Join-Path $downloads 'TICTAC-Studio-Regie.exe') -Force
+    $indexPath = Join-Path $downloads 'index.json'
+    if (Test-Path -LiteralPath $indexPath) {
+        try {
+            $idx = Get-Content -LiteralPath $indexPath -Raw -Encoding UTF8 | ConvertFrom-Json
+            if ($idx.windows_studio) {
+                $idx.windows_studio.version = $version
+                $idx.windows_studio.filename = $setupName
+                $idx.windows_studio.download = "https://tictachebdo.cd/wp-content/uploads/tictac-live/$setupName"
+                $idx.windows_studio.github_release = "https://github.com/stickrdc-paulin/tictac-live/releases/latest/download/$setupName"
+                $idx.windows_studio.setup_github_release = $idx.windows_studio.github_release
+                ($idx | ConvertTo-Json -Depth 6) | Set-Content -LiteralPath $indexPath -Encoding UTF8
+                Write-Host "[build] index.json windows_studio → $version / $setupName"
+            }
+        } catch {
+            Write-Warning "index.json non mis à jour : $_"
+        }
+    }
+}
+
 Write-Host "[build] OK"
 Write-Host "  App     : $exe"
 Write-Host "  Setup   : $setup"

@@ -39,6 +39,9 @@ WizardStyle=modern
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x86compatible
 ArchitecturesInstallIn64BitMode=x64compatible
+; Même AppId → MAJ in-place sur une ancienne install (pas de 2e entrée Programmes).
+CloseApplications=yes
+UsePreviousAppDir=yes
 UninstallDisplayName={#MyAppName} {#MyAppVersion}
 VersionInfoVersion={#MyAppVersion}.0
 VersionInfoCompany={#MyAppPublisher}
