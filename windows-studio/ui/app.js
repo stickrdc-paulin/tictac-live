@@ -51,6 +51,9 @@
       ? ('Connecté : ' + auth.displayName)
       : 'Session régie active';
     bootStudio();
+    if (window.TTRadio && typeof window.TTRadio.boot === 'function') {
+      window.TTRadio.boot();
+    }
   }
 
   async function authCheck() {

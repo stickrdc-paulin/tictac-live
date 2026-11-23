@@ -15,5 +15,7 @@ local.properties
 node_modules/
 windows-studio/dist/
 windows-studio/build/
+windows-studio/**/__pycache__/
+**/__pycache__/
 downloads/*.exe
 downloads/*.apk
